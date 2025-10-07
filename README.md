@@ -4,6 +4,24 @@
 
 A web app for scraping, analyzing, and semantically searching news articles using state-of-the-art GenAI technologies.
 
+## Table of Contents
+- [Overview](#overview)
+- [Key Features](#key-features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [GenAI Implementation Details](#genai-implementation-details)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Testing](#testing)
+- [API Endpoints](#api-endpoints)
+- [Code Quality](#code-quality)
+- [Performance Metrics](#performance-metrics)
+- [Project Structure](#project-structure)
+- [App Summary](#app-summary)
+- [License](#license)
+- [Contributing](#contributing)
+- [Support](#support)
+
 ## Overview
 
 - **Content Extraction**: Using LLM to extract clean article text from noisy HTML
