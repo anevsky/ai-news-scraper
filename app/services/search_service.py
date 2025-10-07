@@ -77,6 +77,30 @@ class SearchService:
         self.article_repo = ArticleRepository()
         self.vector_repo = VectorRepository()
 
+    def _add_or_upgrade_article(self, articles_by_id: Dict, article: Dict, score: float) -> None:
+        """
+        Add article to results or upgrade its score if already present.
+
+        Helper method to deduplicate articles and ensure highest score wins.
+        This prevents the same article from appearing multiple times with
+        different scores from different search tiers.
+
+        Args:
+            articles_by_id: Dictionary tracking articles by ID
+            article: Article dictionary to add
+            score: Similarity score for this search tier
+
+        Example:
+            Article found in both semantic (45%) and title (90%) search:
+            - First call adds with 45% score
+            - Second call upgrades to 90% score (higher)
+        """
+        article_id = article["id"]
+        # Keep highest score if article already found
+        if article_id not in articles_by_id or articles_by_id[article_id]["similarity_score"] < score:
+            article["similarity_score"] = score
+            articles_by_id[article_id] = article
+
     def search(self, query: str, n_results: int = 15) -> Tuple[List[Dict], List[Dict]]:
         """
         Perform hybrid search combining semantic and keyword methods.
@@ -148,37 +172,19 @@ class SearchService:
         # High relevance - if query appears in title, very likely relevant
         title_results = self.article_repo.search_by_title(query)
         for article in title_results:
-            article_id = article["id"]
-            title_score = 0.9  # 90% relevance
-
-            # Keep highest score if article already found
-            if article_id not in articles_by_id or articles_by_id[article_id]["similarity_score"] < title_score:
-                article["similarity_score"] = title_score
-                articles_by_id[article_id] = article
+            self._add_or_upgrade_article(articles_by_id, article, score=0.9)
 
         # Tier 3: Topic Search (Keyword in Claude-identified topics)
         # Very relevant - if query matches a main theme
         topic_results = self.article_repo.search_by_topic(query)
         for article in topic_results:
-            article_id = article["id"]
-            topic_score = 0.85  # 85% relevance
-
-            # Keep highest score if article already found
-            if article_id not in articles_by_id or articles_by_id[article_id]["similarity_score"] < topic_score:
-                article["similarity_score"] = topic_score
-                articles_by_id[article_id] = article
+            self._add_or_upgrade_article(articles_by_id, article, score=0.85)
 
         # Tier 4: Content Search (Keyword in summary/content)
         # Medium relevance - query mentioned but may not be main topic
         content_results = self.article_repo.search_by_content(query)
         for article in content_results:
-            article_id = article["id"]
-            content_score = 0.7  # 70% relevance
-
-            # Keep highest score if article already found
-            if article_id not in articles_by_id or articles_by_id[article_id]["similarity_score"] < content_score:
-                article["similarity_score"] = content_score
-                articles_by_id[article_id] = article
+            self._add_or_upgrade_article(articles_by_id, article, score=0.7)
 
         # Convert dict to list for sorting
         all_results = list(articles_by_id.values())
