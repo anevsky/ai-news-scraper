@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - News Scraper</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div class="navbar bg-base-100 shadow-lg">
+        <div class="flex-1">
+            <a href="/" class="btn btn-ghost text-xl">News Scraper</a>
+        </div>
+    </div>
+
+    <div class="toast toast-bottom toast-end hidden" id="toast">
+        <div class="alert" id="toast-alert">
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-4 py-8">
+        <div class="max-w-5xl mx-auto">
+            <div class="mb-6">
+                <a href="/" class="btn btn-sm btn-ghost">&larr; Back to Home</a>
+            </div>
+
+            <div class="card bg-base-100 shadow-xl mb-6">
+                <div class="card-body">
+                    <h2 class="card-title">Search Results</h2>
+                    <p class="text-sm text-gray-600">
+                        Found <strong>{{ results|length }}</strong> articles matching:
+                        <span class="badge badge-accent badge-lg">{{ query }}</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="card bg-base-100 shadow-xl">
+                <div class="card-body">
+                    <div id="searchResults" class="space-y-4">
+                        {% if results %}
+                            {% for article in results %}
+                            <div class="card bg-base-200 hover:bg-base-300 transition-colors">
+                                <div class="card-body p-4">
+                                    <div class="flex justify-between items-start gap-4">
+                                        <div class="flex-1">
+                                            <h3 class="card-title text-lg mb-2">
+                                                <a href="/article/{{ article.id }}" class="link link-hover">{{ article.title or 'Untitled Article' }}</a>
+                                            </h3>
+                                            {% if article.source_domain %}
+                                            <div class="text-xs text-gray-500 mb-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                                                </svg>
+                                                {{ article.source_domain }}
+                                            </div>
+                                            {% endif %}
+                                            {% if article.url %}
+                                            <p class="text-xs text-gray-500 break-all mb-2">
+                                                <a href="{{ article.url }}" target="_blank" class="link link-hover">{{ article.url }}</a>
+                                            </p>
+                                            {% endif %}
+                                            {% if article.author %}
+                                            <p class="text-sm text-gray-600 mb-2">By {{ article.author }}</p>
+                                            {% endif %}
+                                            {% if article.summary %}
+                                            <p class="text-sm mt-2 line-clamp-3">{{ article.summary }}</p>
+                                            {% endif %}
+                                            <div class="flex gap-2 mt-3 flex-wrap items-center">
+                                                {% if article.has_analysis %}
+                                                <span class="badge badge-success badge-sm">Analyzed</span>
+                                                {% else %}
+                                                <span class="badge badge-warning badge-sm">Scraped</span>
+                                                {% endif %}
+                                                {% if article.similarity_score %}
+                                                <span class="badge badge-accent badge-sm">{{ "%.0f"|format(article.similarity_score * 100) }}% match</span>
+                                                {% endif %}
+                                                {% if article.topics %}
+                                                    {% for topic in article.topics %}
+                                                    <span class="badge badge-primary badge-sm">{{ topic }}</span>
+                                                    {% endfor %}
+                                                {% endif %}
+                                                {% if article.has_analysis and article.analysis_duration_ms %}
+                                                <span class="badge badge-ghost badge-sm">⚡ {{ article.analysis_duration_ms }}ms</span>
+                                                {% endif %}
+                                                {% if article.has_analysis and article.analysis_tokens %}
+                                                <span class="badge badge-ghost badge-sm">🎯 {{ article.analysis_tokens }} tokens</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        <div class="flex-shrink-0 flex gap-2">
+                                            {% if not article.has_analysis %}
+                                            <button class="btn btn-sm btn-secondary analyze-btn" data-article-id="{{ article.id }}">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                                                </svg>
+                                                Analyze
+                                            </button>
+                                            {% endif %}
+                                            <button class="btn btn-sm btn-ghost btn-square remove-btn" data-article-id="{{ article.id }}" data-article-title="{{ article.title or 'Untitled Article' }}" title="Remove article">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-gray-500 text-center py-8">No articles found matching your search query.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
