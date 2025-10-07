@@ -23,6 +23,7 @@ A web app for scraping, analyzing, and semantically searching news articles usin
 - 🏷️ **Topic Identification**: identifies main themes and keywords
 - 🔍 **Semantic Search**: embeddings enable conceptual similarity matching
 - 🎯 **Hybrid Search**: Combines AI semantic search with keyword matching (4-tier search strategy)
+- 💬 **AI Chat**: Interactive Q&A about articles with context-aware responses
 
 ![AI News Scraper-2](assets/search1.png)
 
@@ -78,6 +79,7 @@ app/
 ├── services/        # Business logic layer
 │   ├── scraper_service.py      # Web scraping logic
 │   ├── analyzer_service.py     # AI analysis
+│   ├── chat_service.py         # AI chat about article
 │   └── search_service.py       # Hybrid search orchestration
 └── routes/          # HTTP endpoints (Controllers)
     ├── articles.py  # Article CRUD operations
@@ -212,7 +214,7 @@ This prevents low semantic scores from hiding good keyword matches.
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/anevsky/news-scraper.git
+git clone https://github.com/anevsky/ai-news-scraper.git
 cd news-scraper
 ```
 
